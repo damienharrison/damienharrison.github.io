@@ -170,7 +170,7 @@ li {
   margin: 0 1%;
   float: left;
   padding: 10px;
-  border: 2px solid #FC5135;
+  border: 1px solid #211755;
   border-radius: 4px;
   position: relative;
   text-align: center;
@@ -183,18 +183,18 @@ li:before {
   margin-left: -15px;
   width: 30px;
   height:30px;
-  background: #FC5135;
+  background: #211755;
   color: white;
   line-height: 30px;
   text-align: center;
   border-radius: 50%;
   font-family: FontAwesome;
 }
-li:nth-child(1):before {content: "\f095"}
+/*li:nth-child(1):before {content: "\f095"}
 li:nth-child(2):before {content: "\f003"}
-li:nth-child(3):before {content: "\f0c1"}
+li:nth-child(3):before {content: "\f0c1"}*/
 h1 {
-  color: #FC5135;
+  color: #211755;
   text-transform: uppercase;
   font-weight: 400;
   line-height: 1;
