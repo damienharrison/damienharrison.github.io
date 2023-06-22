@@ -5,8 +5,11 @@
 # Name of your site (displayed in the header)
 name: Damien Harrison
 
+#Theme
+theme: Modernist
+
 # Short bio or description (displayed in the header)
-description: Photographer and Business Analyst
+description: Exorcising the Demons from your IT systems
 
 # URL of your avatar or profile pic (you could use your GitHub profile pic)
 avatar: https://raw.githubusercontent.com/barryclark/jekyll-now/master/images/jekyll-logo.png
@@ -21,9 +24,9 @@ footer-links:
   email:
   facebook: damienharrison
   flickr:
-  github: damienharrison
+  github: 
   instagram: damienharrison
-  linkedin:
+  linkedin: damienharrison
   pinterest:
   rss: # just type anything here for a working RSS icon, make sure you set the "url" above!
   twitter: damienharrison
@@ -64,7 +67,7 @@ version: v1.1.0
 sass:
   style: :expanded # You might prefer to minify using :compressed
 
-# Use the following plug-ins
+# Use the .following plug-ins
 gems:
   - jekyll-sitemap # Create a sitemap using the official Jekyll sitemap gem
 
