@@ -35,4 +35,4 @@ Thank you for joining me on this tech journey. Stay curious, keep exploring, and
 
 ### Contact me
 
-[email@domain.com](mailto:email@domain.com)
+[contact@damienharrison.co.uk](mailto:contact@damienharrison.co.uk)
