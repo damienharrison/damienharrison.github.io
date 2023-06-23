@@ -1,11 +1,9 @@
 ---
 layout: page
-title: About
+title: About Me
 permalink: /about/
 ---
 
-
-# About Me
 
 Greetings! I'm Damien, a passionate tech enthusiast with a knack for problem-solving. Welcome to my digital space!
 
