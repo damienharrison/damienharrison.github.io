@@ -9,7 +9,7 @@ Greetings! I'm Damien, a passionate tech enthusiast with a knack for problem-sol
 
 ## Unveiling the Tech Journey
 
-With over a decade of experience in the dynamic world of IT, I've worn many hats and dived deep into the intricacies of technology. From software development to project management, I've honed my skills to navigate the ever-evolving tech landscape.
+With over two decades of experience in the dynamic world of IT, I've worn many hats and dived deep into the intricacies of technology. From software development, to project management, to Operations management I've honed my skills to navigate the ever-evolving tech landscape.
 
 ## Tech Alchemist with a Purpose
 
