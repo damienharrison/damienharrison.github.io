@@ -1,3 +1,11 @@
+---
+layout: post
+title:Business Continuity and Disaster Recovery (BCDR) Plan
+author: Damien Harrison
+date: 2023-08-02
+---
+
+
 # Business Continuity and Disaster Recovery (BCDR) Plan
 
 ## Introduction
