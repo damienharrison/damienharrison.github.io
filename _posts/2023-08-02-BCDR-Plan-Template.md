@@ -6,9 +6,7 @@ date: 2023-08-02
 ---
 
 
-# Business Continuity and Disaster Recovery (BCDR) Plan
 
-## Introduction
 
 Welcome to our Business Continuity and Disaster Recovery (BCDR) Plan! This plan outlines the steps and procedures to ensure the continuity of our business operations and data protection during unexpected events, such as cyberattacks, natural disasters, or even a zombie apocalypse! 🧟‍♂️
 
