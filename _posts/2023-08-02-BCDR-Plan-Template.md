@@ -20,14 +20,14 @@ We have conducted a thorough risk assessment to identify potential threats to ou
 
 To ensure a well-coordinated response, we have assigned specific roles to team members for incident management. Let's take a look at our RACI chart to understand who's responsible for what:
 
-```mermaid
+<pre class="mermaid">
 graph LR
 A[Business Continuity Team] -->|Responsible| B(Chief Zombie Hunter)
 A[Business Continuity Team] -->|Responsible| C(Data Defender)
 A[Business Continuity Team] -->|Accountable| D(Bakery Owner)
 A[Business Continuity Team] -->|Consulted| E(IT Manager)
 A[Business Continuity Team] -->|Informed| F(Customers and Suppliers)
-```
+</pre>
 
 ## Data Backup and Storage
 
@@ -60,3 +60,11 @@ Our BCDR plan is like a secret recipe for resilience! It's designed to ensure we
 Remember, safety is our top priority, and we're committed to protecting your data and ensuring business continuity. Now, let's keep calm and carry on baking, knowing that we're prepared for any adventure that comes our way! Stay safe and eat well! 😄🍰
 
 #BCDR #BusinessContinuity #DisasterRecovery #ZombieApocalypse #Preparedness
+
+<script type="module">
+	import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+	mermaid.initialize({
+		startOnLoad: true,
+		theme: 'dark'
+	});
+</script>
