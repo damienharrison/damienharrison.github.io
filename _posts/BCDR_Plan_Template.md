@@ -33,7 +33,7 @@ A[Business Continuity Team] -->|Informed| F(Customers and Suppliers)
 
 Data is the lifeblood of our business, so we've got it covered! Our backups are not just protected within the bakery's oven; they are securely stored offsite in the cloud 🌥️. No zombie attack or fire 🔥 can touch our valuable data!
 
-## BCDR Testing and Drills
+## BCDR Testing and Drills 
 
 Practice makes perfect, even in the face of the undead! We conduct regular BCDR testing and drills to ensure our team is well-prepared for any disaster scenario. Plus, it's a fun opportunity to role-play as zombie-fighting heroes! 🧟‍♀️🦸‍♂️
 
