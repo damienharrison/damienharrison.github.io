@@ -12,7 +12,7 @@ Welcome to our Business Continuity and Disaster Recovery (BCDR) Plan! This plan 
 
 ## Risk Assessment
 
-We have conducted a thorough risk assessment to identify potential threats to our business. From server failures to the undead, we've got it covered! We've analyzed the impact of each risk and developed mitigation strategies to minimize disruptions.
+We have conducted a thorough risk assessment to identify potential threats to our business. From server failures to the undead, we've got it covered! We've analysed the impact of each risk and developed mitigation strategies to minimise disruptions.
 
 ## BCDR Roles and Responsibilities
 
@@ -29,7 +29,7 @@ A[Business Continuity Team] -->|Informed| F(Customers and Suppliers)
 
 ## Data Backup and Storage
 
-Data is the lifeblood of our business, so we've got it covered! Our backups are not just protected within the bakery's oven; they are securely stored offsite in the cloud 🌥️. No zombie attack or fire 🔥 can touch our valuable data!
+Data is the lifeblood of our business, so we've got it covered! Our backups are not just protected within the bakery's oven; they are securely stored [offsite in an air-gapped solution located in the cloud](https://www.bondgate.co.uk/ensuring-uninterrupted-business-operations-discover-our-hardware-free-bcdr-solutions/) 🌥️. No zombie attack or fire 🔥 can touch our valuable data!
 
 ## BCDR Testing and Drills 
 
@@ -41,7 +41,7 @@ In case of an emergency, we have well-defined communication channels, so everyon
 
 ## Business Continuity Scenarios
 
-Let's face it; zombies are just one of the many potential threats. So, we've prepared for all sorts of situations. From earthquakes to alien invasions, we've got a plan for every eventuality. Safety first, always! 🌍👽
+Let's face it; zombies are just one of the many potential threats. So, we've prepared for all sorts of situations. From earthquakes to alien invasions 👾, we've got a plan for every eventuality. Safety first, always! 🌍👽
 
 ## External Resources and Support
 
