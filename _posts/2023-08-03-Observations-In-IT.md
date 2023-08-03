@@ -1,11 +1,10 @@
 ---
 layout: post
-title: Observations of an IT Leader
+title: Transforming IT Departments: From Cost Centres to Business Enablers🚀
 author: Damien Harrison
 date: 2023-08-03
 ---
 
-## **Transforming IT Departments: From Cost Centres to Business Enablers** 🚀
 
 As someone deeply immersed in the realm of IT management for over 15 years, I've observed a recurring pattern in how business and IT departments collaborate—or sometimes, fail to do so. Over the past 25 years, IT has become a critical keystone in organisations worldwide. However, the perception of the humble IT Department has, unfortunately, often been confined to that of a mere cost centre—a resource consumer rather than a true business enabler.
 
