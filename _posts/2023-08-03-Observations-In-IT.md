@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Transforming IT Departments: From Cost Centres to Business Enablers🚀
+title: Transforming IT Departments - From Cost Centres to Business Enablers🚀
 author: Damien Harrison
 date: 2023-08-03
 ---
