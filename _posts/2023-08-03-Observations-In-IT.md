@@ -12,8 +12,6 @@ Yet, fear not! A well-run IT Department can be a powerful catalyst for progress,
 
 ### **Finding Our True North with "The Phoenix Project"**
 
-![PhoenixProject](image url "https://damienharrison.co.uk/images/phoenix-vs-unicorn.png")
-
 Prepare to be captivated by insights from one of my all-time favourite books, "The Phoenix Project." This literary gem revolutionised my thinking about how IT Departments should operate. It introduced the concept of "The Three Ways," emphasising systems thinking and a global perspective.
 
 In the book, Bill, an IT manager, seeks wisdom from DevOps guru Erik, who intriguingly compares IT to a manufacturing factory. Just as different parts of a manufacturing line must work in harmony, IT and business departments must unite to tackle common goals.
