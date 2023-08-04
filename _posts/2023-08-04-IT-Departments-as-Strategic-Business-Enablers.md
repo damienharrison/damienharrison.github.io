@@ -1,4 +1,10 @@
-**Best-in-Class Process: IT Departments as Strategic Business Enablers 🚀**
+---
+layout: post
+title: IT Departments as Strategic Business Enablers
+author: Damien Harrison
+date: 2023-08-04
+---
+
 
 **Step 1: Aligning with Organisational Goals**
 - Engage with key stakeholders, including business leaders and department heads, to gain insights into the organisation's vision and objectives.
