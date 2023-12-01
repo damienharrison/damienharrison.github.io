@@ -13,7 +13,7 @@ avatar: /images/damienharrisonlogo.jfif
 
 # Theme
 
-remote_theme: pages-themes/tactile@v0.2.0
+remote_theme: pages-themes/midnight@v0.2.0
 plugins:
 - jekyll-remote-theme # add this line to the plugins list if you already have one
 
@@ -24,11 +24,11 @@ plugins:
 # Includes an icon in the footer for each username you enter
 footer-links:
   dribbble:
-  email:
+  email: contact@damienharrison.co.uk
   facebook:
   flickr:
   github: 
-  instagram:
+  instagram: damienharrison
   linkedin: damien-harrison
   pinterest:
   rss: # just type anything here for a working RSS icon
@@ -43,7 +43,7 @@ footer-links:
 disqus:
 
 # Enter your Google Analytics web tracking code (e.g. UA-2110908-2) to activate tracking
-google_analytics:
+google_analytics: UA-4049870-1
 
 # Your website URL (e.g. http://barryclark.github.io or http://www.barryclark.co)
 # Used for Sitemap.xml and your RSS feed
