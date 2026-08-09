@@ -5,6 +5,8 @@
 #include "touch_handler.h"
 #include "opensky_api.h"
 #include "location_service.h"
+#include "wifi_manager.h"
+#include "theme_manager.h"
 #include "ui_manager.h"
 
 // Global objects
@@ -13,18 +15,10 @@ RadarEngine radar_engine;
 TouchHandler touch_handler;
 OpenSkyAPI opensky_api;
 LocationService location_service;
-UIManager ui_manager(&display_driver, &radar_engine, &touch_handler, &opensky_api, &location_service);
-
-// Startup state
-enum StartupState {
-    STARTUP_DISPLAY,
-    STARTUP_WIFI,
-    STARTUP_LOCATION,
-    STARTUP_COMPLETE
-};
-
-StartupState startup_state = STARTUP_DISPLAY;
-uint32_t startup_time = 0;
+WiFiManager wifi_manager;
+ThemeManager theme_manager;
+UIManager ui_manager(&display_driver, &radar_engine, &touch_handler, &opensky_api,
+                     &location_service, &wifi_manager, &theme_manager);
 
 void setup() {
     Serial.begin(115200);
@@ -36,57 +30,81 @@ void setup() {
     // Initialize display
     Serial.println("1. Initializing display...");
     display_driver.init();
-    display_driver.getDisplay().setTextColor(COLOR_TEXT);
-    display_driver.getDisplay().setCursor(10, 10);
-    display_driver.getDisplay().print("Initializing...");
 
-    // Initialize other components
-    Serial.println("2. Initializing touch...");
-    touch_handler.init();
+    // Initialize WiFi manager and load credentials
+    Serial.println("2. Initializing WiFi manager...");
+    wifi_manager.initSPIFFS();
+    wifi_manager.loadCredentials();
 
-    Serial.println("3. Connecting to WiFi...");
-    display_driver.drawText(10, 30, "WiFi: Connecting...", COLOR_TEXT, 1);
-    if (opensky_api.connect()) {
-        Serial.println("   WiFi connected!");
-        display_driver.drawText(10, 50, "WiFi: OK", COLOR_TEXT, 1);
+    if (wifi_manager.isConfigured()) {
+        Serial.println("   WiFi credentials found");
+        display_driver.drawText(10, 30, "WiFi: Connecting...", COLOR_TEXT, 1);
+
+        if (wifi_manager.connect()) {
+            Serial.println("   WiFi connected!");
+            display_driver.drawText(10, 50, "WiFi: Connected", COLOR_TEXT, 1);
+        } else {
+            Serial.println("   WiFi connection failed");
+            display_driver.drawText(10, 50, "WiFi: Failed", COLOR_PLANE_ACTIVE, 1);
+        }
     } else {
-        Serial.println("   WiFi connection failed!");
-        display_driver.drawText(10, 50, "WiFi: Failed", COLOR_PLANE_ACTIVE, 1);
+        Serial.println("   No WiFi credentials configured");
+        display_driver.drawText(10, 30, "WiFi: Setup needed", COLOR_PLANE_ACTIVE, 1);
     }
 
-    Serial.println("4. Setting default location...");
-    // Default to London for testing - change this based on your preference
+    // Initialize theme
+    Serial.println("3. Initializing theme...");
+    theme_manager.init();
+
+    // Initialize touch
+    Serial.println("4. Initializing touch...");
+    touch_handler.init();
+
+    // Initialize location
+    Serial.println("5. Setting default location...");
     location_service.setManualLocation(51.5074, -0.1278);
     Location loc = location_service.getLocation();
     radar_engine.init(loc.latitude, loc.longitude);
 
-    Serial.println("5. Initialization complete!");
-    display_driver.drawText(10, 70, "Ready!", COLOR_TEXT, 1);
-    delay(1000);
-
+    // Initialize UI
+    Serial.println("6. Initializing UI...");
     ui_manager.init();
-    startup_time = millis();
+
+    Serial.println("7. Initialization complete!");
+    Serial.println("\nSerial Commands:");
+    Serial.println("  postcode:<code>  - Set location by UK postcode");
+    Serial.println("  radius:<km>       - Change radar radius (km)");
+    Serial.println("  status            - Print current status");
+    Serial.println("  theme             - Print current theme");
+    Serial.println("  theme:light       - Switch to light theme");
+    Serial.println("  theme:dark        - Switch to dark theme");
+    Serial.println("  wifi:status       - Print WiFi status");
+    Serial.println("  wifi:reset        - Reset WiFi credentials");
+
+    delay(1000);
 }
 
 void loop() {
     // Main application loop
     ui_manager.update();
 
-    // Debug output every 10 seconds
+    // Handle serial commands
+    handleSerialInput();
+
+    // Debug output every 15 seconds
     static uint32_t last_debug = 0;
-    if (millis() - last_debug > 10000) {
-        Serial.printf("Status: Aircraft: %d, WiFi: %s, Zoom: %d\n",
+    if (millis() - last_debug > 15000) {
+        Serial.printf("[Status] Aircraft: %d | WiFi: %s | Theme: %s | Zoom: %d\n",
                      radar_engine.getProjectedAircraft().size(),
-                     opensky_api.isConnected() ? "OK" : "FAIL",
+                     opensky_api.isConnected() ? "ON" : "OFF",
+                     (theme_manager.getTheme() == THEME_LIGHT) ? "LIGHT" : "DARK",
                      radar_engine.getZoomLevel());
         last_debug = millis();
     }
 
-    // Keep some CPU breathing room
     delay(10);
 }
 
-// Helper function to update location via Serial (for testing)
 void handleSerialInput() {
     if (Serial.available()) {
         String input = Serial.readStringUntil('\n');
@@ -96,17 +114,57 @@ void handleSerialInput() {
             String postcode = input.substring(9);
             Serial.printf("Setting postcode: %s\n", postcode.c_str());
             ui_manager.setPostcode(postcode);
-        } else if (input.startsWith("radius:")) {
+        }
+        else if (input.startsWith("radius:")) {
             float radius = input.substring(7).toFloat();
             Serial.printf("Setting radius: %.1f km\n", radius);
             ui_manager.setRadiusKm(radius);
-        } else if (input == "status") {
+        }
+        else if (input == "status") {
             Location loc = location_service.getLocation();
             Serial.printf("Current location: %.4f, %.4f\n", loc.latitude, loc.longitude);
             Serial.printf("Aircraft detected: %d\n", radar_engine.getProjectedAircraft().size());
             Serial.printf("Zoom level: %d (%.0f km)\n", radar_engine.getZoomLevel(), radar_engine.getRadarRadius());
-        } else {
-            Serial.println("Commands: postcode:<code>, radius:<km>, status");
+            Serial.printf("WiFi: %s\n", opensky_api.isConnected() ? "Connected" : "Disconnected");
+        }
+        else if (input == "theme") {
+            const char* theme_name = (theme_manager.getTheme() == THEME_LIGHT) ? "LIGHT" : "DARK";
+            Serial.printf("Current theme: %s\n", theme_name);
+        }
+        else if (input == "theme:light") {
+            theme_manager.setTheme(THEME_LIGHT);
+            Serial.println("Switched to LIGHT theme");
+        }
+        else if (input == "theme:dark") {
+            theme_manager.setTheme(THEME_DARK);
+            Serial.println("Switched to DARK theme");
+        }
+        else if (input == "wifi:status") {
+            if (wifi_manager.isConfigured()) {
+                Serial.printf("WiFi SSID: %s\n", wifi_manager.getSSID().c_str());
+                Serial.printf("WiFi Connected: %s\n", wifi_manager.isConnected() ? "Yes" : "No");
+                Serial.printf("Signal Strength: %d%%\n", wifi_manager.getSignalStrength());
+            } else {
+                Serial.println("WiFi not configured");
+            }
+        }
+        else if (input == "wifi:reset") {
+            wifi_manager.deleteCredentials();
+            Serial.println("WiFi credentials deleted. Restart device to reconfigure.");
+        }
+        else if (input == "help" || input == "?") {
+            Serial.println("Available commands:");
+            Serial.println("  postcode:<code>  - Set location by UK postcode");
+            Serial.println("  radius:<km>       - Change radar radius");
+            Serial.println("  status            - Print status");
+            Serial.println("  theme             - Print current theme");
+            Serial.println("  theme:light       - Switch to light theme");
+            Serial.println("  theme:dark        - Switch to dark theme");
+            Serial.println("  wifi:status       - Print WiFi status");
+            Serial.println("  wifi:reset        - Reset WiFi credentials");
+        }
+        else {
+            Serial.println("Unknown command. Type 'help' for available commands.");
         }
     }
 }

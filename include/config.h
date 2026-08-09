@@ -8,9 +8,12 @@
 #define CENTER_Y (TFT_HEIGHT / 2)
 #define RADIUS 110  // Inner usable radius for round display
 
-// WiFi Configuration
-#define WIFI_SSID "YOUR_SSID"
-#define WIFI_PASS "YOUR_PASSWORD"
+// WiFi Configuration - Set in UI on device
+// Leave these empty - will be loaded from SPIFFS
+#define WIFI_SSID ""
+#define WIFI_PASS ""
+#define WIFI_CONFIG_FILE "/spiffs/wifi.json"
+#define WIFI_SETUP_TIMEOUT 300000  // 5 minutes to setup WiFi
 
 // OpenSky API Configuration
 #define OPENSKY_API_URL "https://opensky-network.org/api/states/all"
@@ -27,17 +30,54 @@
 #define TOUCH_CS 33
 #define TOUCH_INT 32
 
-// Display Colors (RGB565)
+// Theme Mode
+enum ThemeMode {
+    THEME_LIGHT,
+    THEME_DARK
+};
+#define DEFAULT_THEME THEME_DARK
+
+// Display Colors (RGB565) - Light Theme
 #define COLOR_BLACK 0x0000
 #define COLOR_WHITE 0xFFFF
-#define COLOR_RADAR_BG 0x1020
-#define COLOR_RADAR_GRID 0x2945
-#define COLOR_PLANE_ACTIVE 0xF800  // Red
-#define COLOR_PLANE_SELECTED 0xFFE0  // Yellow
-#define COLOR_TEXT 0xFFFF
-#define COLOR_ALTITUDE_HIGH 0xF800   // Red (high alt)
-#define COLOR_ALTITUDE_MID 0xFBE0    // Yellow (mid alt)
-#define COLOR_ALTITUDE_LOW 0x07E0    // Green (low alt)
+#define COLOR_RADAR_BG_LIGHT 0x1020      // Dark blue
+#define COLOR_RADAR_GRID_LIGHT 0x2945    // Dim blue
+#define COLOR_PLANE_ACTIVE_LIGHT 0xF800  // Red
+#define COLOR_PLANE_SELECTED_LIGHT 0xFFE0 // Yellow
+#define COLOR_TEXT_LIGHT 0xFFFF          // White
+#define COLOR_ALTITUDE_HIGH_LIGHT 0xF800   // Red
+#define COLOR_ALTITUDE_MID_LIGHT 0xFBE0    // Yellow
+#define COLOR_ALTITUDE_LOW_LIGHT 0x07E0    // Green
+#define COLOR_BUTTON_LIGHT 0x39E7        // Light blue
+#define COLOR_BUTTON_ACTIVE_LIGHT 0x1F1F // Dark gray
+
+// Display Colors (RGB565) - Night Theme (Dark)
+#define COLOR_RADAR_BG_DARK 0x0000       // Pure black
+#define COLOR_RADAR_GRID_DARK 0x1884     // Very dim blue
+#define COLOR_PLANE_ACTIVE_DARK 0xFC00   // Bright red
+#define COLOR_PLANE_SELECTED_DARK 0xFFF8 // Bright yellow
+#define COLOR_TEXT_DARK 0xF7FF           // Bright white
+#define COLOR_ALTITUDE_HIGH_DARK 0xFC00    // Bright red
+#define COLOR_ALTITUDE_MID_DARK 0xFFF8    // Bright yellow
+#define COLOR_ALTITUDE_LOW_DARK 0x0FF0    // Bright cyan
+#define COLOR_BUTTON_DARK 0x18E3         // Dark cyan
+#define COLOR_BUTTON_ACTIVE_DARK 0x7FFF  // Bright cyan
+
+// Macro to get color based on theme
+#define GET_COLOR(light, dark, theme) ((theme == THEME_LIGHT) ? (light) : (dark))
+
+// Default color definitions (will be set by theme)
+extern uint16_t COLOR_RADAR_BG;
+extern uint16_t COLOR_RADAR_GRID;
+extern uint16_t COLOR_PLANE_ACTIVE;
+extern uint16_t COLOR_PLANE_SELECTED;
+extern uint16_t COLOR_TEXT;
+extern uint16_t COLOR_ALTITUDE_HIGH;
+extern uint16_t COLOR_ALTITUDE_MID;
+extern uint16_t COLOR_ALTITUDE_LOW;
+extern uint16_t COLOR_BUTTON;
+extern uint16_t COLOR_BUTTON_ACTIVE;
+extern ThemeMode CURRENT_THEME;
 
 // Aircraft Altitude Thresholds (feet)
 #define ALTITUDE_HIGH 25000
@@ -49,10 +89,12 @@
 
 // UI States
 enum UIState {
+    UI_WIFI_SETUP,    // Setup WiFi on startup
     UI_RADAR,
     UI_DETAILS,
     UI_MAP,
-    UI_SETTINGS
+    UI_SETTINGS,
+    UI_THEME_SELECT
 };
 
 enum TouchMode {

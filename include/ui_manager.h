@@ -7,6 +7,9 @@
 #include "touch_handler.h"
 #include "opensky_api.h"
 #include "location_service.h"
+#include "wifi_manager.h"
+#include "theme_manager.h"
+#include "virtual_keyboard.h"
 
 class UIManager {
 private:
@@ -16,25 +19,36 @@ private:
     TouchHandler* touch;
     OpenSkyAPI* api;
     LocationService* location;
+    WiFiManager* wifi_mgr;
+    ThemeManager* theme_mgr;
+    VirtualKeyboard* keyboard;
 
     // UI timing
     uint32_t last_radar_update;
     uint32_t last_api_update;
+    uint32_t wifi_setup_start;
 
     // State management
     String current_postcode;
     float current_radius;
+    int wifi_setup_step;  // 0=SSID, 1=PASSWORD
+    String temp_ssid;
+    String temp_password;
 
 public:
     UIManager(DisplayDriver* disp, RadarEngine* rad, TouchHandler* touch_h,
-              OpenSkyAPI* api_h, LocationService* loc);
+              OpenSkyAPI* api_h, LocationService* loc, WiFiManager* wifi,
+              ThemeManager* theme);
 
     void init();
     void update();
     void setPostcode(const String& postcode);
     void setRadiusKm(float radius);
+    bool isWiFiConfigured() const;
 
     // Screen rendering
+    void drawWiFiSetupScreen();
+    void drawThemeSelectScreen();
     void drawRadarScreen();
     void drawDetailsScreen();
     void drawMapScreen();
@@ -50,6 +64,9 @@ private:
     void handleRadarTouch();
     void handleDetailsTouch();
     void handleMapTouch();
+    void handleWiFiSetupTouch();
+    void handleThemeSelectTouch();
+    void drawButton(int x, int y, int w, int h, const char* label, bool highlighted = false);
 };
 
 #endif
