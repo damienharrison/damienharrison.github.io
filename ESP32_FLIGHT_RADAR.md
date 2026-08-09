@@ -195,6 +195,32 @@ status                    # Print current status
 | 3 | 25 km | Local area |
 | 4 | 10 km | Detailed view |
 
+## Settings System
+
+The application includes a **comprehensive settings system** that eliminates all hardcoded configuration. All parameters can be adjusted directly from the device UI:
+
+### Accessing Settings
+1. **From Radar Screen**: Tap anywhere (not on aircraft) to open Settings menu
+2. **Via Serial**: Use serial commands for quick adjustments
+3. **Persistent Storage**: All changes saved to SPIFFS and restored on power-up
+
+### Main Categories
+- **Radar Settings**: Radius (5-250 km), center location
+- **Display Settings**: Theme (light/dark), brightness (0-255), grid opacity
+- **Trail Settings**: Enable/disable, trail point count, max aircraft
+
+### Example Serial Commands
+```
+settings:show             # Display all current settings
+settings:reset            # Reset to factory defaults
+settings:radar 100        # Set radius to 100 km
+settings:theme dark       # Switch to dark theme
+settings:trails on        # Enable aircraft trails
+settings:brightness 128   # Set brightness to 50%
+```
+
+**📖 For detailed settings documentation**, see [SETTINGS_SYSTEM.md](SETTINGS_SYSTEM.md)
+
 ## Architecture
 
 ### Core Components
@@ -259,10 +285,11 @@ status                    # Print current status
 - **Serial Debug**: Every 10 seconds
 
 ### Optimization Tips
-1. Increase `OPENSKY_UPDATE_INTERVAL` if WiFi bandwidth is limited
-2. Reduce `RADAR_UPDATE_INTERVAL` for smoother animation (increases CPU load)
-3. Adjust `MAX_RADIUS_KM` to limit aircraft tracking range
-4. Use PSRAM-enabled build for larger aircraft databases
+1. Use Settings menu to increase API update interval if WiFi bandwidth is limited
+2. Reduce radar display interval for smoother animation (increases CPU load)
+3. Adjust radar radius to limit aircraft tracking range
+4. Reduce trail point count or max aircraft count to save memory
+5. Use PSRAM-enabled build for larger aircraft databases
 
 ## Troubleshooting
 
@@ -285,10 +312,11 @@ status                    # Print current status
 4. Try calibrating touch (if your display supports it)
 
 ### WiFi Connection Issues
-1. Verify SSID and password in `config.h`
+1. Use Settings → WiFi screen to configure WiFi credentials on device
 2. Check if network requires WPA2/WPA3 (device supports both)
 3. Try 2.4GHz network (5GHz may have connectivity issues on some boards)
-4. Monitor signal strength with `status` serial command
+4. Monitor signal strength with `status` or `wifi:status` serial command
+5. Use `wifi:reset` to clear stored credentials and reconfigure
 
 ## Future Enhancements
 
