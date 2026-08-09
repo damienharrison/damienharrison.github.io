@@ -83,18 +83,27 @@ extern ThemeMode CURRENT_THEME;
 #define ALTITUDE_HIGH 25000
 #define ALTITUDE_MID 10000
 
+// Trail Configuration
+#define MAX_TRAIL_POINTS 60         // Points per aircraft
+#define MAX_TRAILS 50               // Max aircraft tracked
+#define POINT_INTERVAL 5000         // Add point every 5 sec
+#define TRAIL_TIMEOUT 600000        // Remove after 10 min
+
 // Zoom Levels
 #define ZOOM_LEVEL_COUNT 5
 #define DEFAULT_ZOOM 2  // 50km default
 
 // UI States
 enum UIState {
-    UI_WIFI_SETUP,    // Setup WiFi on startup
+    UI_WIFI_SETUP,           // Setup WiFi on startup
     UI_RADAR,
     UI_DETAILS,
     UI_MAP,
-    UI_SETTINGS,
-    UI_THEME_SELECT
+    UI_SETTINGS,             // Main settings menu
+    UI_THEME_SELECT,
+    UI_RADAR_SETTINGS,       // Radar configuration
+    UI_TRAIL_SETTINGS,       // Trail configuration
+    UI_DISPLAY_SETTINGS      // Display configuration
 };
 
 enum TouchMode {

@@ -8,6 +8,7 @@
 #include "wifi_manager.h"
 #include "theme_manager.h"
 #include "trail_manager.h"
+#include "settings_manager.h"
 #include "ui_manager.h"
 
 // Global objects
@@ -19,8 +20,9 @@ LocationService location_service;
 WiFiManager wifi_manager;
 ThemeManager theme_manager;
 TrailManager trail_manager;
+SettingsManager settings_manager;
 UIManager ui_manager(&display_driver, &radar_engine, &touch_handler, &opensky_api,
-                     &location_service, &wifi_manager, &theme_manager, &trail_manager);
+                     &location_service, &wifi_manager, &theme_manager, &trail_manager, &settings_manager);
 
 void setup() {
     Serial.begin(115200);
@@ -54,29 +56,36 @@ void setup() {
         display_driver.drawText(10, 30, "WiFi: Setup needed", COLOR_PLANE_ACTIVE, 1);
     }
 
+    // Initialize settings
+    Serial.println("3. Initializing settings...");
+    settings_manager.loadSettings();
+    const Settings& settings = settings_manager.getSettings();
+
     // Initialize theme
-    Serial.println("3. Initializing theme...");
+    Serial.println("4. Initializing theme...");
+    theme_manager.setTheme(settings.theme);
     theme_manager.init();
 
     // Initialize touch
-    Serial.println("4. Initializing touch...");
+    Serial.println("5. Initializing touch...");
     touch_handler.init();
 
     // Initialize trail manager
-    Serial.println("5. Initializing trail manager...");
+    Serial.println("6. Initializing trail manager...");
     radar_engine.setTrailManager(&trail_manager);
 
-    // Initialize location
-    Serial.println("6. Setting default location...");
-    location_service.setManualLocation(51.5074, -0.1278);
+    // Initialize location from settings
+    Serial.println("7. Setting location from settings...");
+    location_service.setManualLocation(settings.center_latitude, settings.center_longitude);
     Location loc = location_service.getLocation();
     radar_engine.init(loc.latitude, loc.longitude);
+    radar_engine.setRadiusKm(settings.radar_radius_km);
 
     // Initialize UI
-    Serial.println("7. Initializing UI...");
+    Serial.println("8. Initializing UI...");
     ui_manager.init();
 
-    Serial.println("8. Initialization complete!");
+    Serial.println("9. Initialization complete!");
     Serial.println("\nSerial Commands:");
     Serial.println("  postcode:<code>  - Set location by UK postcode");
     Serial.println("  radius:<km>       - Change radar radius (km)");

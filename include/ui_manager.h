@@ -11,6 +11,7 @@
 #include "theme_manager.h"
 #include "virtual_keyboard.h"
 #include "trail_manager.h"
+#include "settings_manager.h"
 
 class UIManager {
 private:
@@ -24,6 +25,7 @@ private:
     ThemeManager* theme_mgr;
     VirtualKeyboard* keyboard;
     TrailManager* trail_mgr;
+    SettingsManager* settings_mgr;
 
     // UI timing
     uint32_t last_radar_update;
@@ -41,7 +43,7 @@ private:
 public:
     UIManager(DisplayDriver* disp, RadarEngine* rad, TouchHandler* touch_h,
               OpenSkyAPI* api_h, LocationService* loc, WiFiManager* wifi,
-              ThemeManager* theme, TrailManager* trails);
+              ThemeManager* theme, TrailManager* trails, SettingsManager* settings);
 
     void init();
     void update();
@@ -63,13 +65,25 @@ public:
     // Getters
     UIState getCurrentState() { return current_state; }
 
+    // Settings screen methods
+    void drawRadarSettingsScreen();
+    void drawTrailSettingsScreen();
+    void drawDisplaySettingsScreen();
+
 private:
     void handleRadarTouch();
     void handleDetailsTouch();
     void handleMapTouch();
     void handleWiFiSetupTouch();
     void handleThemeSelectTouch();
+    void handleSettingsTouch();
+    void handleRadarSettingsTouch();
+    void handleTrailSettingsTouch();
+    void handleDisplaySettingsTouch();
+
     void drawButton(int x, int y, int w, int h, const char* label, bool highlighted = false);
+    void drawSlider(int x, int y, int w, int h, int value, int max_value, const char* label);
+    void drawUpDownButtons(int x, int y, int& value, int min_val, int max_val);
 };
 
 #endif

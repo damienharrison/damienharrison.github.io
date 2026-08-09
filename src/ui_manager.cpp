@@ -2,10 +2,10 @@
 
 UIManager::UIManager(DisplayDriver* disp, RadarEngine* rad, TouchHandler* touch_h,
                      OpenSkyAPI* api_h, LocationService* loc, WiFiManager* wifi,
-                     ThemeManager* theme, TrailManager* trails)
+                     ThemeManager* theme, TrailManager* trails, SettingsManager* settings)
     : current_state(UI_WIFI_SETUP), display(disp), radar(rad), touch(touch_h),
       api(api_h), location(loc), wifi_mgr(wifi), theme_mgr(theme), trail_mgr(trails),
-      last_radar_update(0), last_api_update(0), wifi_setup_start(0),
+      settings_mgr(settings), last_radar_update(0), last_api_update(0), wifi_setup_start(0),
       current_radius(DEFAULT_RADIUS_KM), wifi_setup_step(0), show_trails(true) {
     keyboard = new VirtualKeyboard();
 }
@@ -72,6 +72,15 @@ void UIManager::update() {
                 break;
             case UI_SETTINGS:
                 drawSettingsScreen();
+                break;
+            case UI_RADAR_SETTINGS:
+                drawRadarSettingsScreen();
+                break;
+            case UI_TRAIL_SETTINGS:
+                drawTrailSettingsScreen();
+                break;
+            case UI_DISPLAY_SETTINGS:
+                drawDisplaySettingsScreen();
                 break;
         }
 
@@ -271,35 +280,39 @@ void UIManager::drawSettingsScreen() {
     display->drawFilledRect(0, 0, TFT_WIDTH, 25, COLOR_RADAR_BG);
     display->drawText(10, 5, "Settings", COLOR_TEXT, 1);
 
+    // Settings category buttons
+    drawButton(10, 50, 50, 15, "Radar", false);
+    drawButton(75, 50, 50, 15, "Display", false);
+    drawButton(140, 50, 55, 15, "Trails", false);
+
     char buf[64];
-    int y = 40;
+    int y = 75;
 
-    snprintf(buf, sizeof(buf), "Postcode: %s", current_postcode.c_str());
-    display->drawText(10, y, buf, COLOR_TEXT, 1);
-    y += 25;
-
+    // Quick status
     snprintf(buf, sizeof(buf), "WiFi: %s", api->isConnected() ? "ON" : "OFF");
     display->drawText(10, y, buf, COLOR_TEXT, 1);
-    y += 25;
+    y += 15;
 
     const char* theme = (theme_mgr->getTheme() == THEME_LIGHT) ? "Light" : "Dark";
     snprintf(buf, sizeof(buf), "Theme: %s", theme);
     display->drawText(10, y, buf, COLOR_TEXT, 1);
-    y += 25;
+    y += 15;
+
+    // Quick buttons
+    drawButton(10, 90, 50, 15, "WiFi", false);
+    drawButton(70, 90, 50, 15, "Theme", false);
+
+    y = 125;
+    snprintf(buf, sizeof(buf), "Radius: %.0f km", settings_mgr->getRadarRadius());
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 15;
 
     const char* trails_status = (trail_mgr && trail_mgr->isEnabled()) ? "On" : "Off";
-    int trail_count = trail_mgr ? trail_mgr->getTrailCount() : 0;
-    snprintf(buf, sizeof(buf), "Trails: %s (%d)", trails_status, trail_count);
+    snprintf(buf, sizeof(buf), "Trails: %s", trails_status);
     display->drawText(10, y, buf, COLOR_TEXT, 1);
     y += 30;
 
-    // Buttons
-    drawButton(10, 170, 50, 18, "Theme", false);
-    drawButton(70, 170, 50, 18, "Trails", false);
-    drawButton(130, 170, 50, 18, "WiFi", false);
-    drawButton(10, 195, 170, 18, "Back to Radar", false);
-
-    display->drawText(10, TFT_HEIGHT - 20, "Tap button to change", COLOR_RADAR_GRID, 1);
+    drawButton(10, 200, 170, 18, "Back to Radar", false);
 }
 
 void UIManager::handleTouchInput() {
@@ -326,33 +339,16 @@ void UIManager::handleTouchInput() {
             handleMapTouch();
             break;
         case UI_SETTINGS:
-            // Handle settings touches
-            // Theme button
-            if (point.x > 10 && point.x < 60 && point.y > 170 && point.y < 188) {
-                theme_mgr->toggleTheme();
-            }
-            // Trails button
-            else if (point.x > 70 && point.x < 120 && point.y > 170 && point.y < 188) {
-                if (trail_mgr) {
-                    trail_mgr->toggleEnabled();
-                }
-            }
-            // WiFi button
-            else if (point.x > 130 && point.x < 180 && point.y > 170 && point.y < 188) {
-                current_state = UI_WIFI_SETUP;
-                wifi_setup_step = 0;
-                temp_ssid = "";
-                temp_password = "";
-                wifi_setup_start = millis();
-            }
-            // Back button
-            else if (point.x > 10 && point.x < 180 && point.y > 195 && point.y < 213) {
-                current_state = UI_RADAR;
-            }
-            // Anywhere else returns to radar
-            else {
-                current_state = UI_RADAR;
-            }
+            handleSettingsTouch();
+            break;
+        case UI_RADAR_SETTINGS:
+            handleRadarSettingsTouch();
+            break;
+        case UI_TRAIL_SETTINGS:
+            handleTrailSettingsTouch();
+            break;
+        case UI_DISPLAY_SETTINGS:
+            handleDisplaySettingsTouch();
             break;
     }
 }
@@ -450,5 +446,237 @@ void UIManager::handleThemeSelectTouch() {
         // Set default location
         location->setManualLocation(51.5074, -0.1278);  // London default
         radar->init(51.5074, -0.1278);
+    }
+}
+
+void UIManager::handleSettingsTouch() {
+    TouchPoint point = touch->getTouchPoint();
+
+    // Radar button
+    if (point.x > 10 && point.x < 65 && point.y > 50 && point.y < 70) {
+        current_state = UI_RADAR_SETTINGS;
+    }
+    // Display button
+    else if (point.x > 75 && point.x < 130 && point.y > 50 && point.y < 70) {
+        current_state = UI_DISPLAY_SETTINGS;
+    }
+    // Trails button
+    else if (point.x > 140 && point.x < 195 && point.y > 50 && point.y < 70) {
+        current_state = UI_TRAIL_SETTINGS;
+    }
+    // WiFi button
+    else if (point.x > 10 && point.x < 60 && point.y > 90 && point.y < 108) {
+        current_state = UI_WIFI_SETUP;
+        wifi_setup_step = 0;
+        temp_ssid = "";
+        temp_password = "";
+        wifi_setup_start = millis();
+    }
+    // Theme button
+    else if (point.x > 70 && point.x < 120 && point.y > 90 && point.y < 108) {
+        theme_mgr->toggleTheme();
+    }
+    // Back button
+    else if (point.x > 10 && point.x < 190 && point.y > 200 && point.y < 218) {
+        current_state = UI_RADAR;
+    }
+}
+
+void UIManager::drawRadarSettingsScreen() {
+    display->clear();
+
+    display->drawFilledRect(0, 0, TFT_WIDTH, 25, COLOR_RADAR_BG);
+    display->drawText(10, 5, "Radar Settings", COLOR_TEXT, 1);
+
+    char buf[64];
+    int y = 40;
+
+    snprintf(buf, sizeof(buf), "Radius: %.0f km", settings_mgr->getRadarRadius());
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 20;
+
+    // Decrease/Increase radius buttons
+    if (settings_mgr->getRadarRadius() > MIN_RADIUS_KM) {
+        drawButton(10, y, 30, 15, "-", false);
+    }
+    drawButton(50, y, 30, 15, "+", false);
+    y += 25;
+
+    snprintf(buf, sizeof(buf), "Lat: %.4f", settings_mgr->getCenterLatitude());
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 15;
+
+    snprintf(buf, sizeof(buf), "Lon: %.4f", settings_mgr->getCenterLongitude());
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 30;
+
+    drawButton(10, TFT_HEIGHT - 25, 170, 18, "Back to Settings", false);
+    display->drawText(10, TFT_HEIGHT - 5, "Tap +/- to adjust radius", COLOR_RADAR_GRID, 1);
+}
+
+void UIManager::drawTrailSettingsScreen() {
+    display->clear();
+
+    display->drawFilledRect(0, 0, TFT_WIDTH, 25, COLOR_RADAR_BG);
+    display->drawText(10, 5, "Trail Settings", COLOR_TEXT, 1);
+
+    char buf[64];
+    int y = 40;
+
+    const char* trails_status = settings_mgr->areTrailsEnabled() ? "On" : "Off";
+    snprintf(buf, sizeof(buf), "Trails: %s", trails_status);
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 20;
+
+    drawButton(10, y, 60, 15, "Toggle", false);
+    y += 25;
+
+    snprintf(buf, sizeof(buf), "Points: %d", settings_mgr->getMaxTrailPoints());
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 15;
+
+    drawButton(10, y, 20, 15, "-", false);
+    drawButton(35, y, 20, 15, "+", false);
+    y += 25;
+
+    snprintf(buf, sizeof(buf), "Max Aircraft: %d", settings_mgr->getMaxTrails());
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 15;
+
+    drawButton(10, y, 20, 15, "-", false);
+    drawButton(35, y, 20, 15, "+", false);
+    y += 30;
+
+    drawButton(10, TFT_HEIGHT - 25, 170, 18, "Back to Settings", false);
+}
+
+void UIManager::drawDisplaySettingsScreen() {
+    display->clear();
+
+    display->drawFilledRect(0, 0, TFT_WIDTH, 25, COLOR_RADAR_BG);
+    display->drawText(10, 5, "Display Settings", COLOR_TEXT, 1);
+
+    char buf[64];
+    int y = 40;
+
+    const char* theme = (theme_mgr->getTheme() == THEME_LIGHT) ? "Light" : "Dark";
+    snprintf(buf, sizeof(buf), "Theme: %s", theme);
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 20;
+
+    drawButton(10, y, 70, 15, "Toggle Theme", false);
+    y += 25;
+
+    snprintf(buf, sizeof(buf), "Brightness: %d%%", (settings_mgr->getBrightness() * 100) / 255);
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 15;
+
+    drawButton(10, y, 20, 15, "-", false);
+    drawButton(35, y, 20, 15, "+", false);
+    y += 25;
+
+    snprintf(buf, sizeof(buf), "Grid Opacity: %d%%", (settings_mgr->getGridOpacity() * 100) / 255);
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 15;
+
+    drawButton(10, y, 20, 15, "-", false);
+    drawButton(35, y, 20, 15, "+", false);
+    y += 30;
+
+    drawButton(10, TFT_HEIGHT - 25, 170, 18, "Back to Settings", false);
+}
+
+void UIManager::handleRadarSettingsTouch() {
+    TouchPoint point = touch->getTouchPoint();
+
+    // Decrease radius
+    if (point.x > 10 && point.x < 40 && point.y > 60 && point.y < 75) {
+        float new_radius = settings_mgr->getRadarRadius() - 10.0f;
+        if (new_radius >= MIN_RADIUS_KM) {
+            settings_mgr->setRadarRadius(new_radius);
+            radar->setRadiusKm(new_radius);
+        }
+    }
+    // Increase radius
+    else if (point.x > 50 && point.x < 80 && point.y > 60 && point.y < 75) {
+        float new_radius = settings_mgr->getRadarRadius() + 10.0f;
+        if (new_radius <= MAX_RADIUS_KM) {
+            settings_mgr->setRadarRadius(new_radius);
+            radar->setRadiusKm(new_radius);
+        }
+    }
+    // Back button
+    else if (point.x > 10 && point.x < 190 && point.y > (TFT_HEIGHT - 25) && point.y < TFT_HEIGHT) {
+        current_state = UI_SETTINGS;
+    }
+}
+
+void UIManager::handleTrailSettingsTouch() {
+    TouchPoint point = touch->getTouchPoint();
+
+    // Toggle trails
+    if (point.x > 10 && point.x < 70 && point.y > 60 && point.y < 75) {
+        settings_mgr->setTrailsEnabled(!settings_mgr->areTrailsEnabled());
+        if (trail_mgr) {
+            trail_mgr->setEnabled(settings_mgr->areTrailsEnabled());
+        }
+    }
+    // Decrease trail points
+    else if (point.x > 10 && point.x < 30 && point.y > 90 && point.y < 105) {
+        int new_points = settings_mgr->getMaxTrailPoints() - 10;
+        settings_mgr->setMaxTrailPoints(new_points);
+    }
+    // Increase trail points
+    else if (point.x > 35 && point.x < 55 && point.y > 90 && point.y < 105) {
+        int new_points = settings_mgr->getMaxTrailPoints() + 10;
+        settings_mgr->setMaxTrailPoints(new_points);
+    }
+    // Decrease max aircraft
+    else if (point.x > 10 && point.x < 30 && point.y > 120 && point.y < 135) {
+        int new_trails = settings_mgr->getMaxTrails() - 5;
+        settings_mgr->setMaxTrails(new_trails);
+    }
+    // Increase max aircraft
+    else if (point.x > 35 && point.x < 55 && point.y > 120 && point.y < 135) {
+        int new_trails = settings_mgr->getMaxTrails() + 5;
+        settings_mgr->setMaxTrails(new_trails);
+    }
+    // Back button
+    else if (point.x > 10 && point.x < 190 && point.y > (TFT_HEIGHT - 25) && point.y < TFT_HEIGHT) {
+        current_state = UI_SETTINGS;
+    }
+}
+
+void UIManager::handleDisplaySettingsTouch() {
+    TouchPoint point = touch->getTouchPoint();
+
+    // Toggle theme
+    if (point.x > 10 && point.x < 80 && point.y > 60 && point.y < 75) {
+        theme_mgr->toggleTheme();
+        settings_mgr->setTheme(theme_mgr->getTheme());
+    }
+    // Decrease brightness
+    else if (point.x > 10 && point.x < 30 && point.y > 90 && point.y < 105) {
+        int new_brightness = settings_mgr->getBrightness() - 25;
+        settings_mgr->setBrightness(new_brightness);
+    }
+    // Increase brightness
+    else if (point.x > 35 && point.x < 55 && point.y > 90 && point.y < 105) {
+        int new_brightness = settings_mgr->getBrightness() + 25;
+        settings_mgr->setBrightness(new_brightness);
+    }
+    // Decrease grid opacity
+    else if (point.x > 10 && point.x < 30 && point.y > 120 && point.y < 135) {
+        int new_opacity = settings_mgr->getGridOpacity() - 25;
+        settings_mgr->setGridOpacity(new_opacity);
+    }
+    // Increase grid opacity
+    else if (point.x > 35 && point.x < 55 && point.y > 120 && point.y < 135) {
+        int new_opacity = settings_mgr->getGridOpacity() + 25;
+        settings_mgr->setGridOpacity(new_opacity);
+    }
+    // Back button
+    else if (point.x > 10 && point.x < 190 && point.y > (TFT_HEIGHT - 25) && point.y < TFT_HEIGHT) {
+        current_state = UI_SETTINGS;
     }
 }
