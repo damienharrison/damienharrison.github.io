@@ -1,10 +1,38 @@
-_site
+# Build directories
+.pio/
+build/
+dist/
+.pioenvs/
+.piolibdeps/
+
+# VS Code
+.vscode/
 .DS_Store
-.jekyll
-.jekyll-metadata
-.bundle
-.sass-cache
-Gemfile
-Gemfile.lock
-node_modules
-package.json
+
+# Compiled files
+*.o
+*.a
+*.so
+*.dylib
+
+# IDE
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*~
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
