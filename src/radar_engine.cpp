@@ -7,7 +7,8 @@ int zoom_radius[ZOOM_LEVEL_COUNT] = {250, 100, 50, 25, 10};
 
 RadarEngine::RadarEngine()
     : center_latitude(0), center_longitude(0), radar_radius_km(50),
-      zoom_level(DEFAULT_ZOOM), pan_x(0), pan_y(0), selected_aircraft_idx(-1) {}
+      zoom_level(DEFAULT_ZOOM), pan_x(0), pan_y(0), selected_aircraft_idx(-1),
+      trail_manager(nullptr) {}
 
 void RadarEngine::init(float lat, float lon) {
     center_latitude = lat;
@@ -88,6 +89,9 @@ void RadarEngine::drawRadar(DisplayDriver& display) {
     display.drawRadarBackground();
     display.drawRadarGrid(radar_radius_km);
 
+    // Draw trails (behind aircraft)
+    drawTrails(display);
+
     // Draw all visible aircraft
     for (size_t i = 0; i < projected_aircraft.size(); i++) {
         auto& proj = projected_aircraft[i];
@@ -105,6 +109,90 @@ void RadarEngine::drawRadar(DisplayDriver& display) {
     snprintf(info_buf, sizeof(info_buf), "R:%.0f %dZ A:%d",
              radar_radius_km, zoom_level, projected_aircraft.size());
     display.drawText(5, 5, info_buf, COLOR_TEXT, 1);
+}
+
+void RadarEngine::drawTrails(DisplayDriver& display) {
+    if (!trail_manager || !trail_manager->isEnabled()) {
+        return;
+    }
+
+    auto& all_trails = trail_manager->getAllTrails();
+    uint32_t now = millis();
+
+    for (auto& trail_pair : all_trails) {
+        auto& trail = trail_pair.second;
+
+        if (trail.points.size() < 2) {
+            continue;  // Need at least 2 points to draw a line
+        }
+
+        // Draw trail lines
+        for (size_t i = 1; i < trail.points.size(); i++) {
+            TrailPoint& prev = trail.points[i - 1];
+            TrailPoint& curr = trail.points[i];
+
+            // Project both points
+            int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+
+            // Create temporary aircraft structs for projection
+            Aircraft temp_prev, temp_curr;
+            temp_prev.latitude = prev.latitude;
+            temp_prev.longitude = prev.longitude;
+            temp_prev.altitude = prev.altitude;
+            temp_prev.track = 0;
+
+            temp_curr.latitude = curr.latitude;
+            temp_curr.longitude = curr.longitude;
+            temp_curr.altitude = curr.altitude;
+            temp_curr.track = 0;
+
+            projectAircraft(temp_prev, x1, y1);
+            projectAircraft(temp_curr, x2, y2);
+
+            // Check if both points are visible
+            bool p1_visible = (x1 >= 0 && x1 < TFT_WIDTH && y1 >= 0 && y1 < TFT_HEIGHT);
+            bool p2_visible = (x2 >= 0 && x2 < TFT_WIDTH && y2 >= 0 && y2 < TFT_HEIGHT);
+
+            int dx = x1 - CENTER_X;
+            int dy = y1 - CENTER_Y;
+            p1_visible = (dx * dx + dy * dy) <= (RADIUS * RADIUS);
+
+            dx = x2 - CENTER_X;
+            dy = y2 - CENTER_Y;
+            p2_visible = (dx * dx + dy * dy) <= (RADIUS * RADIUS);
+
+            if (p1_visible || p2_visible) {
+                // Calculate fade based on age
+                uint32_t age = now - curr.timestamp;
+                uint32_t max_age = 300000;  // 5 minutes max trail age
+                float fade_factor = 1.0f - ((float)age / max_age);
+                fade_factor = constrain(fade_factor, 0.0f, 1.0f);
+
+                // Choose color based on altitude and fade
+                uint16_t trail_color;
+                if (curr.altitude > ALTITUDE_HIGH) {
+                    trail_color = COLOR_ALTITUDE_HIGH;
+                } else if (curr.altitude > ALTITUDE_MID) {
+                    trail_color = COLOR_ALTITUDE_MID;
+                } else {
+                    trail_color = COLOR_ALTITUDE_LOW;
+                }
+
+                // Simple fade: use COLOR_RADAR_BG for older points
+                // In a real implementation, you'd blend colors
+                if (fade_factor < 0.3f) {
+                    trail_color = COLOR_RADAR_GRID;  // Very dim for old points
+                } else if (fade_factor < 0.6f) {
+                    // Medium dim - represented by grid color (a compromise)
+                    trail_color = COLOR_RADAR_GRID;
+                }
+                // else full color for recent points
+
+                // Draw line segment
+                display.drawLine(x1, y1, x2, y2, trail_color);
+            }
+        }
+    }
 }
 
 void RadarEngine::selectAircraft(int x, int y) {

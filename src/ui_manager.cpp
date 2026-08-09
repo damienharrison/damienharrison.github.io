@@ -2,11 +2,11 @@
 
 UIManager::UIManager(DisplayDriver* disp, RadarEngine* rad, TouchHandler* touch_h,
                      OpenSkyAPI* api_h, LocationService* loc, WiFiManager* wifi,
-                     ThemeManager* theme)
+                     ThemeManager* theme, TrailManager* trails)
     : current_state(UI_WIFI_SETUP), display(disp), radar(rad), touch(touch_h),
-      api(api_h), location(loc), wifi_mgr(wifi), theme_mgr(theme),
+      api(api_h), location(loc), wifi_mgr(wifi), theme_mgr(theme), trail_mgr(trails),
       last_radar_update(0), last_api_update(0), wifi_setup_start(0),
-      current_radius(DEFAULT_RADIUS_KM), wifi_setup_step(0) {
+      current_radius(DEFAULT_RADIUS_KM), wifi_setup_step(0), show_trails(true) {
     keyboard = new VirtualKeyboard();
 }
 
@@ -38,7 +38,15 @@ void UIManager::update() {
     // Update API data periodically (only if WiFi is configured and connected)
     if (current_state == UI_RADAR && now - last_api_update > OPENSKY_UPDATE_INTERVAL && api->isConnected()) {
         api->fetchAircraft(radar->getCenterLat(), radar->getCenterLon(), radar->getRadarRadius());
-        radar->updateRadar(api->getAircraft());
+        auto& aircraft_list = api->getAircraft();
+        radar->updateRadar(aircraft_list);
+
+        // Update trail positions
+        if (trail_mgr) {
+            for (auto& ac : aircraft_list) {
+                trail_mgr->addTrailPoint(ac.icao24, ac.latitude, ac.longitude, ac.altitude);
+            }
+        }
         last_api_update = now;
     }
 
@@ -174,7 +182,14 @@ void UIManager::drawRadarScreen() {
     const char* theme_char = (theme_mgr->getTheme() == THEME_LIGHT) ? "L" : "D";
     display->drawText(TFT_WIDTH - 15, 5, theme_char, COLOR_TEXT, 1);
 
-    display->drawText(5, TFT_HEIGHT - 20, "TAP:Info  DBL:Zoom", COLOR_TEXT, 1);
+    // Trail indicator
+    if (trail_mgr && trail_mgr->isEnabled()) {
+        display->drawText(TFT_WIDTH - 40, TFT_HEIGHT - 20, "Tr:On", COLOR_TEXT, 1);
+    } else {
+        display->drawText(TFT_WIDTH - 40, TFT_HEIGHT - 20, "Tr:Off", COLOR_RADAR_GRID, 1);
+    }
+
+    display->drawText(5, TFT_HEIGHT - 20, "TAP:Info DBL:Zoom", COLOR_TEXT, 1);
 }
 
 void UIManager::drawDetailsScreen() {
@@ -272,11 +287,19 @@ void UIManager::drawSettingsScreen() {
     display->drawText(10, y, buf, COLOR_TEXT, 1);
     y += 25;
 
-    // Buttons
-    drawButton(10, 180, 100, 20, "Toggle Theme", false);
-    drawButton(120, 180, 100, 20, "Reconfigure", false);
+    const char* trails_status = (trail_mgr && trail_mgr->isEnabled()) ? "On" : "Off";
+    int trail_count = trail_mgr ? trail_mgr->getTrailCount() : 0;
+    snprintf(buf, sizeof(buf), "Trails: %s (%d)", trails_status, trail_count);
+    display->drawText(10, y, buf, COLOR_TEXT, 1);
+    y += 30;
 
-    display->drawText(10, TFT_HEIGHT - 20, "TAP to return", COLOR_RADAR_GRID, 1);
+    // Buttons
+    drawButton(10, 170, 50, 18, "Theme", false);
+    drawButton(70, 170, 50, 18, "Trails", false);
+    drawButton(130, 170, 50, 18, "WiFi", false);
+    drawButton(10, 195, 170, 18, "Back to Radar", false);
+
+    display->drawText(10, TFT_HEIGHT - 20, "Tap button to change", COLOR_RADAR_GRID, 1);
 }
 
 void UIManager::handleTouchInput() {
@@ -304,17 +327,30 @@ void UIManager::handleTouchInput() {
             break;
         case UI_SETTINGS:
             // Handle settings touches
-            if (point.x > 10 && point.x < 110 && point.y > 180 && point.y < 200) {
-                // Toggle theme
+            // Theme button
+            if (point.x > 10 && point.x < 60 && point.y > 170 && point.y < 188) {
                 theme_mgr->toggleTheme();
-            } else if (point.x > 120 && point.x < 220 && point.y > 180 && point.y < 200) {
-                // Reconfigure WiFi
+            }
+            // Trails button
+            else if (point.x > 70 && point.x < 120 && point.y > 170 && point.y < 188) {
+                if (trail_mgr) {
+                    trail_mgr->toggleEnabled();
+                }
+            }
+            // WiFi button
+            else if (point.x > 130 && point.x < 180 && point.y > 170 && point.y < 188) {
                 current_state = UI_WIFI_SETUP;
                 wifi_setup_step = 0;
                 temp_ssid = "";
                 temp_password = "";
                 wifi_setup_start = millis();
-            } else {
+            }
+            // Back button
+            else if (point.x > 10 && point.x < 180 && point.y > 195 && point.y < 213) {
+                current_state = UI_RADAR;
+            }
+            // Anywhere else returns to radar
+            else {
                 current_state = UI_RADAR;
             }
             break;

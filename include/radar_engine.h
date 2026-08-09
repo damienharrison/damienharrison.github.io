@@ -5,6 +5,7 @@
 #include "config.h"
 #include "opensky_api.h"
 #include "display_driver.h"
+#include "trail_manager.h"
 #include <vector>
 
 struct ProjectedAircraft {
@@ -24,13 +25,16 @@ private:
     float pan_x, pan_y;
     int selected_aircraft_idx;
     std::vector<ProjectedAircraft> projected_aircraft;
+    TrailManager* trail_manager;
 
 public:
     RadarEngine();
     void init(float lat, float lon);
+    void setTrailManager(TrailManager* tm) { trail_manager = tm; }
     void updateRadar(std::vector<Aircraft>& aircraft);
     void projectAircraft(Aircraft& aircraft, int& x, int& y);
     void drawRadar(DisplayDriver& display);
+    void drawTrails(DisplayDriver& display);
     void selectAircraft(int x, int y);
     void zoomIn();
     void zoomOut();

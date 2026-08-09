@@ -10,6 +10,7 @@
 #include "wifi_manager.h"
 #include "theme_manager.h"
 #include "virtual_keyboard.h"
+#include "trail_manager.h"
 
 class UIManager {
 private:
@@ -22,6 +23,7 @@ private:
     WiFiManager* wifi_mgr;
     ThemeManager* theme_mgr;
     VirtualKeyboard* keyboard;
+    TrailManager* trail_mgr;
 
     // UI timing
     uint32_t last_radar_update;
@@ -34,11 +36,12 @@ private:
     int wifi_setup_step;  // 0=SSID, 1=PASSWORD
     String temp_ssid;
     String temp_password;
+    bool show_trails;
 
 public:
     UIManager(DisplayDriver* disp, RadarEngine* rad, TouchHandler* touch_h,
               OpenSkyAPI* api_h, LocationService* loc, WiFiManager* wifi,
-              ThemeManager* theme);
+              ThemeManager* theme, TrailManager* trails);
 
     void init();
     void update();

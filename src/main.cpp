@@ -7,6 +7,7 @@
 #include "location_service.h"
 #include "wifi_manager.h"
 #include "theme_manager.h"
+#include "trail_manager.h"
 #include "ui_manager.h"
 
 // Global objects
@@ -17,8 +18,9 @@ OpenSkyAPI opensky_api;
 LocationService location_service;
 WiFiManager wifi_manager;
 ThemeManager theme_manager;
+TrailManager trail_manager;
 UIManager ui_manager(&display_driver, &radar_engine, &touch_handler, &opensky_api,
-                     &location_service, &wifi_manager, &theme_manager);
+                     &location_service, &wifi_manager, &theme_manager, &trail_manager);
 
 void setup() {
     Serial.begin(115200);
@@ -60,17 +62,21 @@ void setup() {
     Serial.println("4. Initializing touch...");
     touch_handler.init();
 
+    // Initialize trail manager
+    Serial.println("5. Initializing trail manager...");
+    radar_engine.setTrailManager(&trail_manager);
+
     // Initialize location
-    Serial.println("5. Setting default location...");
+    Serial.println("6. Setting default location...");
     location_service.setManualLocation(51.5074, -0.1278);
     Location loc = location_service.getLocation();
     radar_engine.init(loc.latitude, loc.longitude);
 
     // Initialize UI
-    Serial.println("6. Initializing UI...");
+    Serial.println("7. Initializing UI...");
     ui_manager.init();
 
-    Serial.println("7. Initialization complete!");
+    Serial.println("8. Initialization complete!");
     Serial.println("\nSerial Commands:");
     Serial.println("  postcode:<code>  - Set location by UK postcode");
     Serial.println("  radius:<km>       - Change radar radius (km)");
@@ -78,6 +84,9 @@ void setup() {
     Serial.println("  theme             - Print current theme");
     Serial.println("  theme:light       - Switch to light theme");
     Serial.println("  theme:dark        - Switch to dark theme");
+    Serial.println("  trails:on         - Enable aircraft trails");
+    Serial.println("  trails:off        - Disable aircraft trails");
+    Serial.println("  trails:clear      - Clear all trail data");
     Serial.println("  wifi:status       - Print WiFi status");
     Serial.println("  wifi:reset        - Reset WiFi credentials");
 
@@ -152,6 +161,18 @@ void handleSerialInput() {
             wifi_manager.deleteCredentials();
             Serial.println("WiFi credentials deleted. Restart device to reconfigure.");
         }
+        else if (input == "trails:on") {
+            trail_manager.setEnabled(true);
+            Serial.println("Aircraft trails enabled");
+        }
+        else if (input == "trails:off") {
+            trail_manager.setEnabled(false);
+            Serial.println("Aircraft trails disabled");
+        }
+        else if (input == "trails:clear") {
+            trail_manager.clearAllTrails();
+            Serial.println("All trails cleared");
+        }
         else if (input == "help" || input == "?") {
             Serial.println("Available commands:");
             Serial.println("  postcode:<code>  - Set location by UK postcode");
@@ -160,6 +181,9 @@ void handleSerialInput() {
             Serial.println("  theme             - Print current theme");
             Serial.println("  theme:light       - Switch to light theme");
             Serial.println("  theme:dark        - Switch to dark theme");
+            Serial.println("  trails:on         - Enable aircraft trails");
+            Serial.println("  trails:off        - Disable aircraft trails");
+            Serial.println("  trails:clear      - Clear all trail data");
             Serial.println("  wifi:status       - Print WiFi status");
             Serial.println("  wifi:reset        - Reset WiFi credentials");
         }
